@@ -2,14 +2,14 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-// ESTA LINHA ABAIXO É A MAIS IMPORTANTE
+// Tela inicial do app, onde o professor pode iniciar o processo de escaneamento do QR code para acessar a tela do aluno.
 export default function HomeScreen() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
-      <Text style={styles.title}>AnalisaEdu - Professor</Text>
+      <Text style={styles.title}>SAECTA-Professor</Text>
       <Text style={styles.subtitle}>Gestão de Provas</Text>
 
       <TouchableOpacity 

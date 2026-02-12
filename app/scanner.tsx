@@ -1,54 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useRouter } from 'expo-router';
+import { View, Text, Image, Button, StyleSheet, Platform } from 'react-native';
+import DocumentScanner from 'react-native-document-scanner-plugin';
 
-export default function ScannerScreen() {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [scanned, setScanned] = useState(false);
-  const router = useRouter();
+export default function ScannerPro() {
+  const [scannedImage, setScannedImage] = useState<string | null>(null);
 
-  if (!permission) {
-    return <View />;
-  }
-
-  if (!permission.granted) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Precisamos de acesso à câmera</Text>
-        <Button onPress={requestPermission} title="Conceder Permissão" />
-      </View>
-    );
-  }
-
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
-    setScanned(true);
-    router.replace(`/student/${data}`); 
+  const scanDocument = async () => {
+    // Inicia o scanner nativo com a interface de recorte
+    try {
+      const { scannedImages } = await DocumentScanner.scanDocument({
+        maxNumDocuments: 1,
+        croppedImageQuality: 100,
+        letUserAdjustCrop: true //  A mágica: permite ajustar os 4 cantos!
+      });
+  
+      if (scannedImages && scannedImages.length > 0) {
+        // Pega a primeira imagem processada
+        setScannedImage(scannedImages[0]);
+      }
+    } catch (error) {
+      console.log("Usuário cancelou ou erro no scanner:", error);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
-        }}
-      />
-      <View style={styles.overlay}>
-        <Text style={styles.instruction}>Aponte para o QR Code</Text>
-      </View>
-      {scanned && (
-        <Button title={'Escanear Novamente'} onPress={() => setScanned(false)} />
+      {scannedImage ? (
+        <View style={styles.previewContainer}>
+          <Image 
+            source={{ uri: scannedImage }} 
+            style={styles.image} 
+            resizeMode="contain" 
+          />
+          <View style={styles.buttons}>
+            <Button title="Tirar Outra" onPress={scanDocument} />
+            <Button title="Usar Essa Foto" onPress={() => alert('Enviando para backend...')} color="green" />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.startContainer}>
+          <Text style={styles.instruction}>Toque abaixo para digitalizar</Text>
+          <Button title="Abrir Scanner" onPress={scanDocument} />
+        </View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', backgroundColor: '#000' },
-  text: { color: '#fff', textAlign: 'center', marginBottom: 20 },
-  overlay: { position: 'absolute', bottom: 50, left: 0, right: 0, alignItems: 'center' },
-  instruction: { color: '#fff', fontSize: 18, backgroundColor: 'rgba(0,0,0,0.7)', padding: 10, borderRadius: 5 },
+  container: { flex: 1, backgroundColor: '#f2f2f2', justifyContent: 'center' },
+  startContainer: { alignItems: 'center' },
+  instruction: { marginBottom: 20, fontSize: 16 },
+  previewContainer: { flex: 1, alignItems: 'center', padding: 20, paddingTop: 50 },
+  image: { width: '100%', height: '80%', marginBottom: 20, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
+  buttons: { flexDirection: 'row', gap: 10 }
 });

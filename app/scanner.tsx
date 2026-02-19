@@ -15,6 +15,7 @@ export default function ScannerFlow() {
   // Dados capturados
   const [studentData, setStudentData] = useState<string | null>(null);
   const [gabaritoImg, setGabaritoImg] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // MUDANÇA: Agora aceita múltiplas páginas para a questão 📸📸
   const [questaoPages, setQuestaoPages] = useState<string[]>([]);
@@ -70,6 +71,67 @@ export default function ScannerFlow() {
       }
     } catch (e) {
       console.log("Scanner cancelado", e);
+    }
+  };
+  // --- LÓGICA 3: ENVIAR PARA O SERVIDOR ---
+  const enviarParaServidor = async () => {
+    if (!studentData || !gabaritoImg) {
+      Alert.alert("Erro", "Faltam dados do aluno ou foto do gabarito.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      
+      // 1. Adiciona o ID/Matrícula do aluno
+      formData.append('aluno_id', studentData);
+
+      // 2. Adiciona a imagem do Gabarito
+      const gabaritoFilename = gabaritoImg.split('/').pop() || 'gabarito.jpg';
+      formData.append('gabarito', {
+        uri: gabaritoImg,
+        name: gabaritoFilename,
+        type: 'image/jpeg',
+      } as any);
+
+      // 3. Adiciona as imagens das Questões (Múltiplos arquivos)
+      questaoPages.forEach((imgUri, index) => {
+        const filename = imgUri.split('/').pop() || `questao_${index}.jpg`;
+        formData.append('questoes', {
+          uri: imgUri,
+          name: filename,
+          type: 'image/jpeg',
+        } as any);
+      });
+
+      // ⚠️ Substitua este IP pelo IP da sua máquina na rede local quando for testar
+      const BACKEND_URL = 'http://192.168.0.163:8000/api/avaliar'; 
+
+      const response = await fetch(BACKEND_URL, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          // Não coloque 'Content-Type': 'multipart/form-data', o fetch/axios faz isso sozinho no mobile!
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        Alert.alert("Sucesso!", `Avaliação enviada. Nota prévia: ${result.nota || 'Em processamento'}`);
+        resetFlow();
+      } else {
+        Alert.alert("Erro no Servidor", result.detail || "Falha ao enviar.");
+      }
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -178,12 +240,13 @@ export default function ScannerFlow() {
           </ScrollView>
 
           <View style={styles.footerButtons}>
-            <Button title="✅ Enviar Avaliação" onPress={() => {
-                Alert.alert("Sucesso", "Dados enviados para o servidor!");
-                resetFlow();
-            }} />
+            <Button 
+              title={isUploading ? "Enviando... ⏳" : "✅ Enviar Avaliação"} 
+              onPress={enviarParaServidor} 
+              disabled={isUploading}
+            />
             <View style={{marginTop: 10}}>
-              <Button title="Cancelar" color="red" onPress={resetFlow} />
+              <Button title="Cancelar" color="red" onPress={resetFlow} disabled={isUploading} />
             </View>
           </View>
         </ScrollView>

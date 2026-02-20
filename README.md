@@ -1,29 +1,22 @@
-# README #
+# SAECTA - Sistema de Correção Automática (OMR)
 
-This README would normally document whatever steps are necessary to get your application up and running.
+Este projeto é uma ferramenta de Visão Computacional integrada a um aplicativo mobile para a correção automática de cartões-resposta (Gabaritos).
 
-### What is this repository for? ###
+## 🚀 Tecnologias
+* **Backend:** Python 3.12, FastAPI (Uvicorn), OpenCV, NumPy.
+* **Mobile:** React Native, Expo, TypeScript.
+* **Arquitetura:** Monorepo.
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+## 🧠 Funcionalidades
+- **Leitura Óptica (OMR):** Processamento de imagem para identificar marcações em gabaritos.
+- **Scanner Mobile:** Interface para captura de imagem via câmera do celular.
+- **Processamento em Tempo Real:** Comunicação via API entre o App e o servidor Python.
 
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+## 🛠️ Como rodar o projeto
+### Backend
+```bash
+cd saecta-server
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
